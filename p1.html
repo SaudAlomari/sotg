@@ -80,8 +80,8 @@
     (function () {
       const startKey = "pageStartTime";
       const guardPage = "index.html";
-      const ONE_HOUR = 60 * 60 * 1000;
-      const CHECK_EVERY = 5 * 60 * 1000;
+      const ONE_HOUR = 5 * 60 * 1000;
+      const CHECK_EVERY = 2 * 60 * 1000;
 
       let startTime = parseInt(localStorage.getItem(startKey), 10);
       if (Number.isNaN(startTime)) {
