@@ -1,72 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Download File Example</title>
+  <style>
+    /* Optional: make the button look like your previous link */
+    #downloadBtn {
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      color: #0b5ed7;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    #downloadBtn:disabled {
+      color: #999;
+      text-decoration: none;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
 <body>
   <h1>Download My File</h1>
   <p>Click below to download the file directly from Google Drive:</p>
 
-  <!-- Empty link that will be filled automatically -->
-  <a id="downloadLink" href="#" target="_blank">📥 Download APK</a>
+  <!-- Button (no visible href to copy) -->
+  <button id="downloadBtn" disabled>📥 Preparing download…</button>
 
+  <!-- Load link from JSON + trigger download programmatically -->
   <script>
-  // 🧩 Load link from JSON file
-  fetch("filelink.json", { cache: "no-store" })
-    .then(response => response.json())
-    .then(data => {
-      const link = document.getElementById("downloadLink");
-      link.href = data.url;
-    })
-    .catch(err => {
-      console.error("Error loading filelink.json:", err);
-      document.getElementById("downloadLink").textContent = "Error loading download link.";
-    });
+    let driveURL = null;
+
+    // Fetch the link at runtime (not in the DOM)
+    fetch("filelink.json", { cache: "no-store" })
+      .then(res => {
+        if (!res.ok) throw new Error("filelink.json not found");
+        return res.json();
+      })
+      .then(data => {
+        driveURL = data.url;
+        const btn = document.getElementById("downloadBtn");
+        btn.textContent = "📥 Download APK";
+        btn.disabled = false;
+
+        btn.addEventListener("click", () => {
+          if (!driveURL) {
+            alert("Download link not ready yet. Please try again.");
+            return;
+          }
+          // Create a temporary <a> and click it (no href exposed in UI)
+          const a = document.createElement("a");
+          a.href = driveURL;
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.download = "";      // hint to download if possible
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      })
+      .catch(err => {
+        console.error("Error loading filelink.json:", err);
+        const btn = document.getElementById("downloadBtn");
+        btn.textContent = "Error loading download link.";
+        btn.disabled = true;
+      });
   </script>
 
-  <!-- 🕒 1-hour redirect security -->
+  <!-- 1-hour redirect security (unchanged logic) -->
   <script>
-  (function () {
-    const startKey = "pageStartTime";
-    const guardPage = "index.html";         
-    const ONE_HOUR = 60 * 60 * 1000;        
-    const CHECK_EVERY = 5 * 60 * 1000;      
+    (function () {
+      const startKey = "pageStartTime";
+      const guardPage = "index.html";
+      const ONE_HOUR = 60 * 60 * 1000;
+      const CHECK_EVERY = 5 * 60 * 1000;
 
-    let startTime = parseInt(localStorage.getItem(startKey), 10);
-    if (Number.isNaN(startTime)) {
-      startTime = Date.now();
-      localStorage.setItem(startKey, String(startTime));
-    }
-
-    function msRemaining() {
-      const elapsed = Date.now() - startTime;
-      return Math.max(0, ONE_HOUR - elapsed);
-    }
-
-    function redirectToGuard() {
-      try { localStorage.removeItem(startKey); } catch (e) {}
-      window.location.replace(guardPage);
-    }
-
-    function checkAndRedirect() {
-      if (msRemaining() <= 0) {
-        redirectToGuard();
+      let startTime = parseInt(localStorage.getItem(startKey), 10);
+      if (Number.isNaN(startTime)) {
+        startTime = Date.now();
+        localStorage.setItem(startKey, String(startTime));
       }
-    }
 
-    const exactTimeout = setTimeout(checkAndRedirect, msRemaining());
-    const interval = setInterval(checkAndRedirect, CHECK_EVERY);
-    ["visibilitychange", "focus"].forEach(evt =>
-      window.addEventListener(evt, checkAndRedirect)
-    );
-    window.addEventListener("beforeunload", () => {
-      clearTimeout(exactTimeout);
-      clearInterval(interval);
-    });
-  })();
+      function msRemaining() {
+        const elapsed = Date.now() - startTime;
+        return Math.max(0, ONE_HOUR - elapsed);
+      }
+
+      function redirectToGuard() {
+        try { localStorage.removeItem(startKey); } catch (e) {}
+        window.location.replace(guardPage);
+      }
+
+      function checkAndRedirect() {
+        if (msRemaining() <= 0) redirectToGuard();
+      }
+
+      const exactTimeout = setTimeout(checkAndRedirect, msRemaining());
+      const interval = setInterval(checkAndRedirect, CHECK_EVERY);
+      ["visibilitychange", "focus"].forEach(evt =>
+        window.addEventListener(evt, checkAndRedirect)
+      );
+      window.addEventListener("beforeunload", () => {
+        clearTimeout(exactTimeout);
+        clearInterval(interval);
+      });
+    })();
   </script>
 
+  <!-- Deterrents: block right-click and common inspect shortcuts -->
+  <script>
+    // Disable right-click context menu
+    document.addEventListener("contextmenu", e => e.preventDefault());
+
+    // Disable common view-source / devtools shortcuts (not bulletproof)
+    document.addEventListener("keydown", e => {
+      // F12
+      if (e.key === "F12") e.preventDefault();
+
+      // Ctrl/Cmd + (U,S,I,J,C,Shift+I/Shift+J)
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && (k === "u" || k === "s" || k === "i" || k === "j" || k === "c")) {
+        e.preventDefault();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (k === "i" || k === "j" || k === "c")) {
+        e.preventDefault();
+      }
+    });
+  </script>
 </body>
 </html>
