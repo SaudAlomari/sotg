@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Download File Example</title>
   <style>
-    /* Optional: make the button look like your previous link */
     #downloadBtn {
       background: none;
       border: none;
@@ -20,57 +19,70 @@
       text-decoration: none;
       cursor: not-allowed;
     }
+    #note {
+      color: red;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>Download My File</h1>
   <p>Click below to download the file directly from Google Drive:</p>
 
-  <!-- Button (no visible href to copy) -->
+  <!-- Button -->
   <button id="downloadBtn" disabled>📥 Preparing download…</button>
+  <p id="note"></p>
 
-  <!-- Load link from JSON + trigger download programmatically -->
+  <!-- Android-only + original open-in-new-tab download -->
   <script>
-    let driveURL = null;
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const btn = document.getElementById("downloadBtn");
+    const note = document.getElementById("note");
 
-    // Fetch the link at runtime (not in the DOM)
-    fetch("filelink.json", { cache: "no-store" })
-      .then(res => {
-        if (!res.ok) throw new Error("filelink.json not found");
-        return res.json();
-      })
-      .then(data => {
-        driveURL = data.url;
-        const btn = document.getElementById("downloadBtn");
-        btn.textContent = "📥 Download APK";
-        btn.disabled = false;
+    if (!isAndroid) {
+      btn.textContent = "Not available on this device";
+      note.textContent = "⚠️ This download is available only on Android devices.";
+      btn.disabled = true;
+    } else {
+      let driveURL = null;
 
-        btn.addEventListener("click", () => {
-          if (!driveURL) {
-            alert("Download link not ready yet. Please try again.");
-            return;
-          }
-          // Create a temporary <a> and click it (no href exposed in UI)
-          const a = document.createElement("a");
-          a.href = driveURL;
-          a.target = "_blank";
-          a.rel = "noopener";
-          a.download = "";      // hint to download if possible
-          a.style.display = "none";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+      fetch("filelink.json", { cache: "no-store" })
+        .then(res => {
+          if (!res.ok) throw new Error("filelink.json not found");
+          return res.json();
+        })
+        .then(data => {
+          driveURL = data.url;
+          btn.textContent = "📥 Download APK";
+          btn.disabled = false;
+
+          btn.addEventListener("click", () => {
+            if (!driveURL) {
+              alert("Download link not ready yet. Please try again.");
+              return;
+            }
+            // Your original behavior (opens new tab)
+            const a = document.createElement("a");
+            a.href = driveURL;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.download = "";
+            a.style.display = "none";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          });
+        })
+        .catch(err => {
+          console.error("Error loading filelink.json:", err);
+          btn.textContent = "Error loading download link.";
+          btn.disabled = true;
         });
-      })
-      .catch(err => {
-        console.error("Error loading filelink.json:", err);
-        const btn = document.getElementById("downloadBtn");
-        btn.textContent = "Error loading download link.";
-        btn.disabled = true;
-      });
+    }
   </script>
 
-  <!-- 1-hour redirect security (unchanged logic) -->
+  <!-- 1-hour redirect security -->
   <script>
     (function () {
       const startKey = "pageStartTime";
@@ -110,24 +122,14 @@
     })();
   </script>
 
-  <!-- Deterrents: block right-click and common inspect shortcuts -->
+  <!-- Deterrents (keep your original) -->
   <script>
-    // Disable right-click context menu
     document.addEventListener("contextmenu", e => e.preventDefault());
-
-    // Disable common view-source / devtools shortcuts (not bulletproof)
     document.addEventListener("keydown", e => {
-      // F12
       if (e.key === "F12") e.preventDefault();
-
-      // Ctrl/Cmd + (U,S,I,J,C,Shift+I/Shift+J)
       const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && (k === "u" || k === "s" || k === "i" || k === "j" || k === "c")) {
-        e.preventDefault();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (k === "i" || k === "j" || k === "c")) {
-        e.preventDefault();
-      }
+      if ((e.ctrlKey || e.metaKey) && (k === "u" || k === "s" || k === "i" || k === "j" || k === "c")) e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (k === "i" || k === "j" || k === "c")) e.preventDefault();
     });
   </script>
 </body>
