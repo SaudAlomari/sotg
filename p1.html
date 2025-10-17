@@ -9,18 +9,31 @@
   <h1>Download My File</h1>
   <p>Click below to download the file directly from Google Drive:</p>
 
-  <a href="https://drive.google.com/uc?export=download&id=1L6AGzQhNr4pFOcTvPCErAI3_o3BHkcJB" download>
-    📥 Download File
-  </a>
-  
+  <!-- Empty link that will be filled automatically -->
+  <a id="downloadLink" href="#" target="_blank">📥 Download APK</a>
+
+  <script>
+  // 🧩 Load link from JSON file
+  fetch("filelink.json", { cache: "no-store" })
+    .then(response => response.json())
+    .then(data => {
+      const link = document.getElementById("downloadLink");
+      link.href = data.url;
+    })
+    .catch(err => {
+      console.error("Error loading filelink.json:", err);
+      document.getElementById("downloadLink").textContent = "Error loading download link.";
+    });
+  </script>
+
+  <!-- 🕒 1-hour redirect security -->
   <script>
   (function () {
     const startKey = "pageStartTime";
-    const guardPage = "index.html";         // ← your guard page
-    const ONE_HOUR = 1 * 60 * 1000;        // 1 hour in ms
-    const CHECK_EVERY = 1 * 60 * 1000;      // 5 minutes in ms
+    const guardPage = "index.html";         
+    const ONE_HOUR = 60 * 60 * 1000;        
+    const CHECK_EVERY = 5 * 60 * 1000;      
 
-    // Initialize or read the start time
     let startTime = parseInt(localStorage.getItem(startKey), 10);
     if (Number.isNaN(startTime)) {
       startTime = Date.now();
@@ -34,7 +47,6 @@
 
     function redirectToGuard() {
       try { localStorage.removeItem(startKey); } catch (e) {}
-      // Use replace so user can't come back with Back button
       window.location.replace(guardPage);
     }
 
@@ -44,24 +56,17 @@
       }
     }
 
-    // 1) Exact trigger at the moment the hour is reached
     const exactTimeout = setTimeout(checkAndRedirect, msRemaining());
-
-    // 2) Safety net: check every 5 minutes too
     const interval = setInterval(checkAndRedirect, CHECK_EVERY);
-
-    // Optional: catch when tab regains focus or becomes visible
     ["visibilitychange", "focus"].forEach(evt =>
       window.addEventListener(evt, checkAndRedirect)
     );
-
-    // Clean up timers if we ever navigate away normally
     window.addEventListener("beforeunload", () => {
       clearTimeout(exactTimeout);
       clearInterval(interval);
     });
   })();
-</script>
+  </script>
 
 </body>
 </html>
