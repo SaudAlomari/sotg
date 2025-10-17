@@ -35,7 +35,7 @@
   <button onclick="checkAccess()">Enter</button>
   <p id="errorMessage"></p>
 
-  <script>
+  <!--<script>
     function checkAccess() {
       const word = document.getElementById('accessWord').value.trim();
       const correctWord = "open123"; // ← change this to your secret word
@@ -46,6 +46,75 @@
         document.getElementById('errorMessage').textContent = "Incorrect word, try again!";
       }
     }
-  </script>
+  </script>-->
+	<!--<script>
+		async function sha256(str) {
+		  const buf = new TextEncoder().encode(str);
+		  const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+		  return Array.from(new Uint8Array(hashBuf))
+			.map(b => b.toString(16).padStart(2, "0"))
+			.join("");
+		}
+
+		async function checkAccess() {
+		  const input = document.getElementById("accessWord").value.trim();
+		  const hash = await sha256(input);
+
+		  // This is the SHA-256 hash of "open123"
+		  const correctHash = "3e2c7a45104ec114ec1c6dcda0d409df34cbda15032e598b0dc2b75684dce82d";
+
+		  if (hash === correctHash) {
+			window.location.href = "p1.html";
+		  } else {
+			document.getElementById("errorMessage").textContent = "Incorrect word, try again!";
+		  }
+		}
+	</script>-->
+	<script>
+  // Compute SHA-256 using Web Crypto
+  async function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  // Load the stored hash from secret.json
+  async function loadCorrectHash() {
+    try {
+      const res = await fetch("secret.json", { cache: "no-store" }); // ensure latest
+      if (!res.ok) throw new Error("Could not fetch secret.json: " + res.status);
+      const j = await res.json();
+      return j.hash;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
+  async function checkAccess() {
+    const input = document.getElementById("accessWord").value.trim();
+    if (!input) {
+      document.getElementById("errorMessage").textContent = "Type the word first.";
+      return;
+    }
+
+    // Get the correct hash (from secret.json)
+    const correctHash = await loadCorrectHash();
+    if (!correctHash) {
+      document.getElementById("errorMessage").textContent = "Auth system error. Try again later.";
+      return;
+    }
+
+    const hash = await sha256(input);
+    if (hash === correctHash) {
+      // success: go to protected page
+      window.location.href = "p1.html";
+    } else {
+      document.getElementById("errorMessage").textContent = "Incorrect word, try again!";
+    }
+  }
+	</script>
 </body>
 </html>
