@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Gate</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    p {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enter Access Word</h1>
+  <input type="password" id="accessWord" placeholder="Type the secret word">
+  <button onclick="checkAccess()">Enter</button>
+  <p id="errorMessage"></p>
+
+  <script>
+    function checkAccess() {
+      const word = document.getElementById('accessWord').value.trim();
+      const correctWord = "open123"; // ← change this to your secret word
+
+      if (word === correctWord) {
+        window.location.href = "p1.html"; // go to your second page
+      } else {
+        document.getElementById('errorMessage').textContent = "Incorrect word, try again!";
+      }
+    }
+  </script>
+</body>
+</html>

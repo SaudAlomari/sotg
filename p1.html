@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download File Example</title>
+</head>
+<body>
+  <h1>Download My File</h1>
+  <p>Click below to download the file directly from Google Drive:</p>
+
+  <a href="https://drive.google.com/uc?export=download&id=1L6AGzQhNr4pFOcTvPCErAI3_o3BHkcJB" download>
+    📥 Download File
+  </a>
+  
+  <script>
+  (function () {
+    const startKey = "pageStartTime";
+    const guardPage = "index.html";         // ← your guard page
+    const ONE_HOUR = 1 * 60 * 1000;        // 1 hour in ms
+    const CHECK_EVERY = 1 * 60 * 1000;      // 5 minutes in ms
+
+    // Initialize or read the start time
+    let startTime = parseInt(localStorage.getItem(startKey), 10);
+    if (Number.isNaN(startTime)) {
+      startTime = Date.now();
+      localStorage.setItem(startKey, String(startTime));
+    }
+
+    function msRemaining() {
+      const elapsed = Date.now() - startTime;
+      return Math.max(0, ONE_HOUR - elapsed);
+    }
+
+    function redirectToGuard() {
+      try { localStorage.removeItem(startKey); } catch (e) {}
+      // Use replace so user can't come back with Back button
+      window.location.replace(guardPage);
+    }
+
+    function checkAndRedirect() {
+      if (msRemaining() <= 0) {
+        redirectToGuard();
+      }
+    }
+
+    // 1) Exact trigger at the moment the hour is reached
+    const exactTimeout = setTimeout(checkAndRedirect, msRemaining());
+
+    // 2) Safety net: check every 5 minutes too
+    const interval = setInterval(checkAndRedirect, CHECK_EVERY);
+
+    // Optional: catch when tab regains focus or becomes visible
+    ["visibilitychange", "focus"].forEach(evt =>
+      window.addEventListener(evt, checkAndRedirect)
+    );
+
+    // Clean up timers if we ever navigate away normally
+    window.addEventListener("beforeunload", () => {
+      clearTimeout(exactTimeout);
+      clearInterval(interval);
+    });
+  })();
+</script>
+
+</body>
+</html>
