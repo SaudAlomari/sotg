@@ -29,7 +29,7 @@
   <!-- Button (no visible href to copy) -->
   <button id="downloadBtn" disabled>📥 Preparing download…</button>
 
-  <!-- Load link from JSON + trigger download via hidden iframe (no new tab) -->
+  <!-- Load link from JSON + trigger download programmatically -->
   <script>
     let driveURL = null;
 
@@ -50,25 +50,16 @@
             alert("Download link not ready yet. Please try again.");
             return;
           }
-
-          // Create (or reuse) a hidden iframe so the current tab doesn't navigate
-          let frame = document.getElementById("hiddenDownloader");
-          if (!frame) {
-            frame = document.createElement("iframe");
-            frame.id = "hiddenDownloader";
-            frame.style.width = "0";
-            frame.style.height = "0";
-            frame.style.border = "0";
-            frame.style.position = "absolute";
-            frame.style.left = "-9999px";
-            // Hide referrer (optional)
-            frame.referrerPolicy = "no-referrer";
-            document.body.appendChild(frame);
-          }
-          frame.src = driveURL;
-
-          // Optional: user feedback if needed
-          // setTimeout(() => alert("If your download didn't start, please try again."), 4000);
+          // Create a temporary <a> and click it (no href exposed in UI)
+          const a = document.createElement("a");
+          a.href = driveURL;
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.download = "";      // hint to download if possible
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
         });
       })
       .catch(err => {
@@ -79,7 +70,7 @@
       });
   </script>
 
-  <!-- 1-hour redirect security -->
+  <!-- 1-hour redirect security (unchanged logic) -->
   <script>
     (function () {
       const startKey = "pageStartTime";
@@ -129,7 +120,7 @@
       // F12
       if (e.key === "F12") e.preventDefault();
 
-      // Ctrl/Cmd + (U,S,I,J,C) and Ctrl/Cmd+Shift+(I/J/C)
+      // Ctrl/Cmd + (U,S,I,J,C,Shift+I/Shift+J)
       const k = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && (k === "u" || k === "s" || k === "i" || k === "j" || k === "c")) {
         e.preventDefault();
